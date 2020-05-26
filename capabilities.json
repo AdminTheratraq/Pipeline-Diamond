@@ -1,0 +1,119 @@
+{
+    "dataRoles": [
+        {
+            "displayName": "Title",
+            "name": "Title",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Phase",
+            "name": "Phase",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Category",
+            "name": "Category",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Name",
+            "name": "Name",
+            "kind": "Grouping"
+        }
+    ],
+    "dataViewMappings": [
+        {
+            "table": {
+                "rows": {
+                    "select": [
+                        {
+                            "for": {
+                                "in": "Title"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "Phase"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "Category"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "Name"
+                            }
+                        }
+                    ]
+                },
+                "columns": {
+                    "select": [
+                        {
+                            "for": {
+                                "in": "Title"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "Phase"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "Category"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "Name"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "objects": {
+        "pipeline": {
+            "displayName": "Pipeline Settings",
+            "properties": {
+                "title": {
+                    "displayName": "Title",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "categories": {
+                    "displayName": "Categories",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "phases": {
+                    "displayName": "Phases",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "layout": {
+                    "displayName": "Layout",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "imgURL": {
+                    "displayName": "Image URL",
+                    "type": {
+                        "text": true
+                    }
+                }
+            }
+        }
+    },
+    "sorting": {
+        "default": {}
+    },
+    "suppressDefaultTitle": true
+}

@@ -1,0 +1,25 @@
+{
+    "visual": {
+        "name": "pipelineVariationDiamond",
+        "displayName": "Pipeline Diamond",
+        "guid": "pipelineVariation2F63E952B62F640B082C360CB29E75360",
+        "visualClassName": "Visual",
+        "version": "1.0.0",
+        "description": "Pipeline Diamond",
+        "supportUrl": "https://sharepointwebpartassets.blob.core.windows.net/$web/pipeline-diamond.html",
+        "gitHubUrl": ""
+    },
+    "apiVersion": "2.6.0",
+    "author": {
+        "name": "TheraTraQ",
+        "email": "powerbi-support@theratraq.com"
+    },
+    "assets": {
+        "icon": "assets/icon.png"
+    },
+    "externalJS": null,
+    "style": "style/visual.less",
+    "capabilities": "capabilities.json",
+    "dependencies": null,
+    "stringResources": []
+}
