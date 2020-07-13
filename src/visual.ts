@@ -41,6 +41,7 @@ import * as d3 from 'd3';
 import DataViewObjects = powerbi.DataViewObjects;
 
 import { VisualSettings } from "./settings";
+import * as sanitizeHtml from 'sanitize-html';
 
 export interface Pipeline {
     Title: String;
@@ -111,7 +112,8 @@ export class Visual implements IVisual {
         this.target.selectAll('*').remove();
         let _this = this;
         this.target.attr('class', 'pipeline-container');
-        if (this.settings.pipeline.layout) {
+        // sanitized user input from settings
+        if (sanitizeHtml(this.settings.pipeline.layout)) {
             this.target.attr('style', 'height:' + (options.viewport.height - 110) + 'px;width:' + (options.viewport.width) + 'px');
         }
         else {
@@ -123,14 +125,16 @@ export class Visual implements IVisual {
         let pipelineData = Visual.CONVERTER(options.dataViews[0], this.host);
         pipelineData = pipelineData.slice(0, 250);
 
-        let phaseData = this.settings.pipeline.phases.split(',');
+        // sanitized user input from settings
+        let phaseData = sanitizeHtml(this.settings.pipeline.phases).split(',');
 
         let colors = ['#2ECC71', '#336EFF', '#641E16', '#FF5733', '#3498DB', '#4A235A', '#154360', '#0B5345', '#784212', '#424949',
             '#17202A', '#E74C3C', '#00ff00', '#0000ff', '#252D48'];
 
         let categoryData = [];
-        if (this.settings.pipeline.categories) {
-            categoryData = this.settings.pipeline.categories.split(',');
+        // sanitized user input from settings
+        if (sanitizeHtml(this.settings.pipeline.categories)) {
+            categoryData = sanitizeHtml(this.settings.pipeline.categories).split(',');
         }
         else {
             categoryData = pipelineData.map(d => d.Category).filter((v, i, self) => self.indexOf(v) === i);
@@ -147,7 +151,7 @@ export class Visual implements IVisual {
 
         this.renderPipelineReport(phaseData, pipelineData, categoryColorData);
 
-        this.renderLegend(categoryColorData)
+        this.renderLegend(categoryColorData);
 
         this.handleScrollEvent();
 
@@ -155,29 +159,21 @@ export class Visual implements IVisual {
     }
 
     private renderLayout() {
-        if (this.settings.pipeline.layout.toLowerCase() === 'header') {
+        // sanitized user input from settings
+        if (sanitizeHtml(this.settings.pipeline.layout).toLowerCase() === 'header') {
+            // removed .html() method and built DOM using append method
             this.header
                 .attr('class', 'visual-header')
-                .html(() => {
-                    if (this.settings.pipeline.imgURL) {
-                        return '<img src="' + this.settings.pipeline.imgURL + '"/>';
-                    }
-                    else {
-                        return "";
-                    }
-                });
+                .append('img')
+                .attr('src', sanitizeHtml(this.settings.pipeline.imgURL));
         }
-        else if (this.settings.pipeline.layout.toLowerCase() === 'footer') {
+        // sanitized user input from settings
+        else if (sanitizeHtml(this.settings.pipeline.layout).toLowerCase() === 'footer') {
+            // removed .html() method and built DOM using append method
             this.footer
                 .attr('class', 'visual-footer')
-                .html(() => {
-                    if (this.settings.pipeline.imgURL) {
-                        return '<img src="' + this.settings.pipeline.imgURL + '"/>';
-                    }
-                    else {
-                        return "";
-                    }
-                });
+                .append('img')
+                .attr('src', sanitizeHtml(this.settings.pipeline.imgURL));
         }
     }
 
@@ -185,15 +181,23 @@ export class Visual implements IVisual {
         let mainContent = this.target.append('div')
             .attr('class', 'main-content');
 
+        // sanitized user input from settings
         mainContent.append('div')
             .attr('class', 'header')
-            .append('p').text(this.settings.pipeline.title);
+            .append('p').text(sanitizeHtml(this.settings.pipeline.title));
 
         let pipelineWrap = mainContent.append('div')
             .attr('class', 'pipeline-wrap');
 
         let pipelineBar = pipelineWrap.append('div')
             .attr('class', 'pipeline-bar');
+
+        if (phaseData.length > 6) {
+            pipelineBar.classed('space-around', false);
+        }
+        else {
+            pipelineBar.classed('space-around', true);
+        }
 
         let phases = pipelineBar.selectAll('.phase')
             .data(phaseData)
@@ -218,6 +222,13 @@ export class Visual implements IVisual {
 
         let companiesWrap = pipelineWrap.append('div')
             .attr('class', 'companies-wrap');
+
+        if (phaseData.length > 6) {
+            companiesWrap.classed('space-around', false);
+        }
+        else {
+            companiesWrap.classed('space-around', true);
+        }
 
         let phaseCompanies = companiesWrap.selectAll('.phase-companies')
             .data(phaseData)
@@ -251,6 +262,14 @@ export class Visual implements IVisual {
             }).text((d: Pipeline) => {
                 return d.Name ? d.Name.toString() : '';
             });
+
+        let companiesWrapNode = companiesWrap.node();
+        if (companiesWrapNode.scrollHeight > companiesWrapNode.clientHeight) {
+            pipelineBar.classed('has-scroll', true);
+        }
+        else {
+            pipelineBar.classed('has-scroll', false);
+        }
     }
 
     private renderLegend(categoryColorData) {
