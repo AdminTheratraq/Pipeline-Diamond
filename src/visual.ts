@@ -42,12 +42,16 @@ import DataViewObjects = powerbi.DataViewObjects;
 
 import { VisualSettings } from "./settings";
 import * as sanitizeHtml from 'sanitize-html';
+import * as validDataUrl from 'valid-data-url';
 
 export interface Pipeline {
-    Title: String;
+    Title: string;
     Phase: string;
     Category: string;
     Name: string;
+    TitleLink: string;
+    HeaderImage: string;
+    FooterImage: string;
 }
 
 export interface Pipelines {
@@ -106,6 +110,7 @@ export class Visual implements IVisual {
 
     @logExceptions()
     public update(options: VisualUpdateOptions) {
+        debugger;
         this.events.renderingStarted(options);
         console.log('Visual Update ', options);
         this.settings = Visual.parseSettings(options && options.dataViews && options.dataViews[0]);
@@ -114,10 +119,12 @@ export class Visual implements IVisual {
         this.target.attr('class', 'pipeline-container');
         // sanitized user input from settings
         if (sanitizeHtml(this.settings.pipeline.layout)) {
-            this.target.attr('style', 'height:' + (options.viewport.height - 110) + 'px;width:' + (options.viewport.width) + 'px');
+            this.target.style('height', (options.viewport.height - 110) + 'px')
+                .style('width', options.viewport.width + 'px');
         }
         else {
-            this.target.attr('style', 'height:' + (options.viewport.height) + 'px;width:' + (options.viewport.width) + 'px');
+            this.target.style('height', options.viewport.height + 'px')
+                .style('width', options.viewport.width + 'px');
         }
         let gHeight = options.viewport.height - this.margin.top - this.margin.bottom;
         let gWidth = options.viewport.width - this.margin.left - this.margin.right;
@@ -128,8 +135,43 @@ export class Visual implements IVisual {
         // sanitized user input from settings
         let phaseData = sanitizeHtml(this.settings.pipeline.phases).split(',');
 
-        let colors = ['#2ECC71', '#336EFF', '#641E16', '#FF5733', '#3498DB', '#4A235A', '#154360', '#0B5345', '#784212', '#424949',
-            '#17202A', '#E74C3C', '#00ff00', '#0000ff', '#252D48'];
+        let colors = [
+            "#2ECC71",
+            "#336EFF",
+            "#641E16",
+            "#FF5733",
+            "#3498DB",
+            "#4A235A",
+            "#154360",
+            "#0B5345",
+            "#784212",
+            "#424949",
+            "#17202A",
+            "#E74C3C",
+            "#00ff00",
+            "#0000ff",
+            "#252D48",
+            "#808080",
+            "#ffbf00",
+            "#ff0000",
+            "#00ffbf",
+            "#ff7d10",
+            "#696969",
+            "#990000",
+            "#ff9999",
+            "#4d0000",
+            "#660044",
+            "#CD853F",
+            "#6B8E23",
+            "#008080",
+            "#483D8B",
+            "#4B0082",
+            "#CC0033",
+            "#6600FF",
+            "#FF00FF",
+            "#330000",
+            "#000000"
+        ];
 
         let categoryData = [];
         // sanitized user input from settings
@@ -147,7 +189,7 @@ export class Visual implements IVisual {
             };
         });
 
-        this.renderLayout();
+        this.renderLayout(pipelineData);
 
         this.renderPipelineReport(phaseData, pipelineData, categoryColorData);
 
@@ -155,17 +197,22 @@ export class Visual implements IVisual {
 
         this.handleScrollEvent();
 
+        this.handleHyperLinkClick();
+
         this.events.renderingFinished(options);
     }
 
-    private renderLayout() {
+    private renderLayout(pipelineData: Pipeline[]) {
+        let [pipeline] = pipelineData;
         // sanitized user input from settings
         if (sanitizeHtml(this.settings.pipeline.layout).toLowerCase() === 'header') {
             // removed .html() method and built DOM using append method
             this.header
                 .attr('class', 'visual-header')
                 .append('img')
-                .attr('src', sanitizeHtml(this.settings.pipeline.imgURL));
+                .attr('src', validDataUrl(pipeline.HeaderImage) ? pipeline.HeaderImage : '');
+            this.footer.selectAll('img').remove();
+            this.footer.classed('visual-footer', false);
         }
         // sanitized user input from settings
         else if (sanitizeHtml(this.settings.pipeline.layout).toLowerCase() === 'footer') {
@@ -173,14 +220,21 @@ export class Visual implements IVisual {
             this.footer
                 .attr('class', 'visual-footer')
                 .append('img')
-                .attr('src', sanitizeHtml(this.settings.pipeline.imgURL));
+                .attr('src', validDataUrl(pipeline.FooterImage) ? pipeline.FooterImage : '');
+            this.header.selectAll('img').remove();
+            this.header.classed('visual-header', false);
+        }
+        else {
+            this.header.selectAll('img').remove();
+            this.header.classed('visual-header', false);
+            this.footer.selectAll('img').remove();
+            this.footer.classed('visual-footer', false);
         }
     }
 
     private renderPipelineReport(phaseData, pipelineData, categoryColorData) {
         let mainContent = this.target.append('div')
             .attr('class', 'main-content');
-
         // sanitized user input from settings
         mainContent.append('div')
             .attr('class', 'header')
@@ -188,7 +242,6 @@ export class Visual implements IVisual {
 
         let pipelineWrap = mainContent.append('div')
             .attr('class', 'pipeline-wrap');
-
         let pipelineBar = pipelineWrap.append('div')
             .attr('class', 'pipeline-bar');
 
@@ -213,10 +266,8 @@ export class Visual implements IVisual {
 
         phases.append('div')
             .attr('class', 'phase-arrow');
-
         phases.append('div')
             .attr('class', 'phase-rope');
-
         phases.append('div')
             .attr('class', 'phase-rope-circle');
 
@@ -244,11 +295,19 @@ export class Visual implements IVisual {
             .append('div')
             .attr('class', 'company');
 
-        companies.append('p')
-            .attr('class', 'company-name')
-            .attr('style', (d: Pipeline) => {
+        companies.append('a')
+            .attr('href', (d: Pipeline) => {
+                return d.TitleLink;
+            })
+            .style('color', (d: Pipeline) => {
                 let [moAcolor] = categoryColorData.filter(cd => cd.category === d.Category);
-                return 'color:' + moAcolor.color + ';';
+                return moAcolor.color;
+            })
+            .append('span')
+            .attr('class', 'company-name')
+            .style('color', (d: Pipeline) => {
+                let [moAcolor] = categoryColorData.filter(cd => cd.category === d.Category);
+                return moAcolor.color;
             })
             .text((d: Pipeline) => {
                 return d.Title ? d.Title.toString() : '';
@@ -256,13 +315,12 @@ export class Visual implements IVisual {
 
         companies.append('p')
             .attr('class', 'product-name')
-            .attr('style', (d: Pipeline) => {
+            .style('color', (d: Pipeline) => {
                 let [moAcolor] = categoryColorData.filter(cd => cd.category === d.Category);
-                return 'color:' + moAcolor.color + ';';
+                return moAcolor.color;
             }).text((d: Pipeline) => {
                 return d.Name ? d.Name.toString() : '';
             });
-
         let companiesWrapNode = companiesWrap.node();
         if (companiesWrapNode.scrollHeight > companiesWrapNode.clientHeight) {
             pipelineBar.classed('has-scroll', true);
@@ -283,8 +341,8 @@ export class Visual implements IVisual {
             .append('div')
             .attr('class', 'legend')
             .append('p')
-            .attr('style', (d: any) => {
-                return 'color:' + d.color + ';';
+            .style('color', (d: any) => {
+                return d.color;
             })
             .text((d: any) => {
                 return d.category ? d.category.toString() : '';
@@ -293,19 +351,29 @@ export class Visual implements IVisual {
         let legendWrapHeight = legendWrap.node().getBoundingClientRect().height;
         let calcHeight = 260 + legendWrapHeight;
         let companiesWrap = d3.select('.companies-wrap');
-        companiesWrap.attr('style', 'height:calc(100% - ' + calcHeight + 'px);');
+        companiesWrap.style('height', 'calc(100% - ' + calcHeight + 'px)');
     }
 
     private handleScrollEvent() {
         let pipelineBar = d3.select('.pipeline-bar');
         let companiesWrap = d3.select('.companies-wrap');
-        pipelineBar.attr('style', 'margin-left:0px;');
+        pipelineBar.style('margin-left', '0px');
         companiesWrap.on('scroll', (e: Event) => {
             e = e || window.event;
             let target: any = e.target || e.srcElement;
-            console.log('scroll', target.scrollLeft);
-            pipelineBar.attr('style', 'margin-left:' + (-target.scrollLeft) + 'px;');
+            pipelineBar.style('margin-left', + (-target.scrollLeft) + 'px');
         });
+    }
+
+    private handleHyperLinkClick() {
+        let _this = this;
+        this.target.selectAll('.phase-companies a')
+            .on('click', function (e: Event) {
+                let link = d3.select(this).attr('href');
+                _this.host.launchUrl(link);
+                d3.event.preventDefault();
+                return false;
+            });
     }
 
     public static CONVERTER(dataView: DataView, host: IVisualHost): Pipeline[] {
@@ -313,7 +381,8 @@ export class Visual implements IVisual {
         let tableView = dataView.table;
         let _rows = tableView.rows;
         let _columns = tableView.columns;
-        let _titleIndex = -1, _phaseIndex = -1, _categoryIndex = -1, _nameIndex;
+        let _titleIndex = -1, _phaseIndex = -1, _categoryIndex = -1, _nameIndex = -1, _linkIndex = -1,
+            _headerImageIndex = -1, _footerImageIndex = -1;
         for (let ti = 0; ti < _columns.length; ti++) {
             if (_columns[ti].roles.hasOwnProperty("Title")) {
                 _titleIndex = ti;
@@ -323,6 +392,12 @@ export class Visual implements IVisual {
                 _categoryIndex = ti;
             } else if (_columns[ti].roles.hasOwnProperty("Name")) {
                 _nameIndex = ti;
+            } else if (_columns[ti].roles.hasOwnProperty("TitleLink")) {
+                _linkIndex = ti;
+            } else if (_columns[ti].roles.hasOwnProperty("HeaderImage")) {
+                _headerImageIndex = ti;
+            } else if (_columns[ti].roles.hasOwnProperty("FooterImage")) {
+                _footerImageIndex = ti;
             }
         }
         for (let i = 0; i < _rows.length; i++) {
@@ -331,7 +406,10 @@ export class Visual implements IVisual {
                 Title: row[_titleIndex] ? row[_titleIndex].toString() : null,
                 Phase: row[_phaseIndex] ? row[_phaseIndex].toString() : null,
                 Category: row[_categoryIndex] ? row[_categoryIndex].toString() : null,
-                Name: row[_nameIndex] ? row[_nameIndex].toString() : null
+                Name: row[_nameIndex] ? row[_nameIndex].toString() : null,
+                TitleLink: row[_linkIndex] ? row[_linkIndex].toString() : null,
+                HeaderImage: row[_headerImageIndex] ? row[_headerImageIndex].toString() : null,
+                FooterImage: row[_footerImageIndex] ? row[_footerImageIndex].toString() : null
             };
             resultData.push(dp);
         }

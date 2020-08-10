@@ -38,5 +38,4 @@ export class PipelineSettings {
   public categories: string = "";
   public phases: string = "";
   public layout: string = "";
-  public imgURL: string = "";
 }

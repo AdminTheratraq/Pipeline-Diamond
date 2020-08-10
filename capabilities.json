@@ -19,6 +19,21 @@
             "displayName": "Name",
             "name": "Name",
             "kind": "Grouping"
+        },
+        {
+            "displayName": "Title Link",
+            "name": "TitleLink",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Header Image",
+            "name": "HeaderImage",
+            "kind": "Grouping"
+        },
+        {
+            "displayName": "Footer Image",
+            "name": "FooterImage",
+            "kind": "Grouping"
         }
     ],
     "dataViewMappings": [
@@ -45,6 +60,21 @@
                             "for": {
                                 "in": "Name"
                             }
+                        },
+                        {
+                            "for": {
+                                "in": "TitleLink"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "HeaderImage"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "FooterImage"
+                            }
                         }
                     ]
                 },
@@ -68,6 +98,21 @@
                         {
                             "for": {
                                 "in": "Name"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "TitleLink"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "HeaderImage"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "FooterImage"
                             }
                         }
                     ]
@@ -99,12 +144,6 @@
                 },
                 "layout": {
                     "displayName": "Layout",
-                    "type": {
-                        "text": true
-                    }
-                },
-                "imgURL": {
-                    "displayName": "Image URL",
                     "type": {
                         "text": true
                     }
