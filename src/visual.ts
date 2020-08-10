@@ -110,7 +110,6 @@ export class Visual implements IVisual {
 
     @logExceptions()
     public update(options: VisualUpdateOptions) {
-        debugger;
         this.events.renderingStarted(options);
         console.log('Visual Update ', options);
         this.settings = Visual.parseSettings(options && options.dataViews && options.dataViews[0]);
